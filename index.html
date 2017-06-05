@@ -1,0 +1,257 @@
+<!doctype>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<script type="text/javascript" src="bower_components/bignumber.js/bignumber.min.js"></script>
+	<script type="text/javascript" src="bower_components/web3/dist/web3-light.js"></script>
+	<script type="text/javascript" src="bower_components/gcweb.js"></script>
+	<script type="text/javascript">
+	
+		function enableShopID() {
+			document.getElementById('shopID').disabled = document.getElementById('isForAll').checked;
+		}
+		
+		function enableHour() {
+			document.getElementById('timeMin').disabled = document.getElementById('isAnytime').checked;
+			document.getElementById('timeMax').disabled = document.getElementById('isAnytime').checked;
+		}
+		
+		function switchMenu(number) {
+			var menus = ['div_find', 'div_create', 'div_condition', 'div_value', 'div_transfer',  'div_destroy', 'div_node'];
+			menus.forEach(function (item, index) {
+				document.getElementById(item).style.display = "none";
+				document.getElementById('menu' + index).style.backgroundColor = "#333";
+			});
+			document.getElementById(menus[number]).style.display = "block";
+			document.getElementById('menu' + number).style.backgroundColor = "#4C50AF";
+		}
+	
+	</script>
+	
+	<style type="text/css">
+	.div1
+	{
+		width: 600px;
+		float: left;
+		margin: 5px 5px 5px 5px;
+		padding: 5px 25px 5px 25px;
+		border-style: solid;
+		border-width: 1px;
+		background-image: url("image/logo.png");
+		background-repeat: no-repeat;
+		background-position: right bottom;
+	}
+	
+	.topnav {
+	  overflow: hidden;
+	  background-color: #333;
+		margin: 5px 5px 5px 5px;
+	}
+
+	.topnav a {
+	  float: left;
+	  display: block;
+	  color: #f2f2f2;
+	  text-align: center;
+	  padding: 14px 16px;
+	  text-decoration: none;
+	  font-size: 17px;
+	}
+
+	.topnav a:hover {
+	  color: yellow;
+	}
+	
+	.divButton {
+		width: 100px;
+		height: 50px;
+		float: left;
+		padding: 5px 5px 5px 5px;
+		border-style: solid;
+		border-width: 1px;
+		background-color: gray;
+	}
+	
+	</style>
+
+</head>
+<body>
+
+	<div class="topnav">
+	  <a href="javascript:switchMenu(0)" id="menu0" style="background-color: #4C50AF">상품권 조회</a>
+	  <a href="javascript:switchMenu(1)" id="menu1">상품권 발급</a>
+	  <a href="javascript:switchMenu(2)" id="menu2">조건 설정</a>
+	  <a href="javascript:switchMenu(3)" id="menu3">가치(금액) 변경</a>
+	  <a href="javascript:switchMenu(4)" id="menu4">소유권 이전</a>
+	  <a href="javascript:switchMenu(5)" id="menu5">상품권 환불</a>
+	  <a href="javascript:switchMenu(6)" id="menu6">개발자 모드</a>
+	</div>
+	
+	
+	<div class="div1" id='div_node' style="display:none">
+		<p>
+		<p style="font-size:30px">시스템 연결 정보</p>
+		<hr>
+		<br>
+		연결 노드 목록:
+		<form>
+			<input type="radio" name="node" id="node0" checked> 노드1 (리눅스)
+			<input type="radio" name="node"> 노드2 (윈도우)
+			<button type="button" onClick="connectNode()">이 서버로 연결</button>
+		</form>
+		<p style="font-size:15px" id="ip"></p>
+		<p style="font-size:15px" id="coinbase"></p>
+		<p style="font-size:15px" id="balance"></p>
+		<p style="font-size:15px" id="secondAccount"></p>
+		<p style="font-size:15px" id="balance2"></p>
+		<p>
+	</div>
+	
+	
+	<div class="div1" id='div_create' style="display:none">
+		<p>
+		<p style="font-size:30px">상품권 발급하기</p>
+		<hr>
+		<br>
+		발행 금액(가치):	
+		<input type="number" id="value" min="0" max="1000000000" placeholder="1000"> <br>
+		<p style="color:red; font-size:75%">*발행 금액에 비례해 수수료가 책정됩니다.</p>
+		<br>
+		소유권 이전이 가능합니다:&nbsp	
+		<input type="checkbox" id="isTransferable" checked> <br>
+		<p style="color:red; font-size:75%">*소유권 이전 가능여부는 발급 이후 변경이 불가능합니다.</p>
+		<br>
+		발급자 계좌의 암호를 입력하세요:	
+		<input type="password" id="crPw">	
+		<p>
+		<button type="button" onClick="createContract()">발급 요청</button>
+		<p>
+		<br>
+		<p style="font-size:20px">상품권이 발급되면 밑에 주소가 나타납니다! </p>
+		<p style="font-size:15px" id="newContract"></p>
+		<p>
+	</div>
+	
+	
+	<div class="div1" id='div_find' style="display:block">
+		<p>
+		<p style="font-size:30px">상품권 조회하기</p>
+		<hr>
+		<br>
+		조회하실 상품권의 주소를 입력하세요:<p>
+		<input type="text" id="inquery" placeholder="0x0000000000000000000000000000000000000000" style="width: 350px;">
+		<button type="button" onClick="findContract()">조회하기</button>
+		<br><br>
+		<p style="font-size:15px" id="minter"></p>
+		<p style="font-size:15px" id="owner"></p>
+		<p style="font-size:15px" id="originalValue"></p>
+		<p style="font-size:15px" id="currentValue"></p>
+		<p style="font-size:15px" id="transferable"></p>
+		<p style="font-size:15px" id="conditionAge"></p>
+		<p style="font-size:15px" id="conditionSex"></p>
+		<p style="font-size:15px" id="conditionTarget"></p>
+		<p style="font-size:15px" id="conditionHour"></p>
+		<p style="font-size:15px" id="conditionDate"></p>
+		<p>
+	</div>
+	
+	
+	<div class="div1" id='div_condition' style="display:none">
+		<p>
+		<p style="font-size:30px">상품권 조건 설정하기</p>	
+		<hr>		
+		<br>
+		<p style="font-size:20px">사용자 조건</p>
+		나이:	
+		<input type="number" id="ageMin" value="0" min="0" max="255" style="width: 50px;"> ~
+		<input type="number" id="ageMax" value="255" min="0" max="255" style="width: 50px;"><br>
+		성별: 남자	
+		<input type="checkbox" id="isForMale" checked>
+		여자	
+		<input type="checkbox" id="isForFemale" checked>
+		<br>
+		<br>
+		<p style="font-size:20px">사용 가능한 대상</p>
+		어디서나 사용이 가능합니다:
+		<input type="checkbox" id="isForAll" onchange="enableShopID()" checked> 혹은
+		<input type="text" id="shopID" placeholder="사용처의 주소를 입력하세요" style="width: 250px;" disabled>
+		<br>
+		<br>
+		<p style="font-size:20px">사용 가능한 시간과 날짜 (GMT +9)</p>
+		언제나 사용 가능합니다:
+		<input type="checkbox" id="isAnytime" onchange="enableHour()" checked> 혹은
+		<input type="time" id="timeMin" style="width: 120px;" value="00:00" disabled> ~
+		<input type="time" id="timeMax" style="width: 120px;" value="15:00" disabled><br>
+		사용 가능한 날짜:
+		<input type="date" id="dateMin" style="width: 140px;"> ~
+		<input type="date" id="dateMax" style="width: 140px;">
+		<p>
+		<br>
+		발급자 계좌의 암호를 입력하세요:	
+		<input type="password" id="scPw">
+		<p>
+		<button id="bt_scUnlock" type="button" onClick="unlockSC()" disabled>계좌 잠금 해제</button>
+		<button id="bt_set" type="button" onClick="setCondition()" disabled>조건 설정 요청</button>
+		<p>
+	</div>
+		
+	
+	<div class="div1" id='div_value' style="display:none">
+		<p>
+		<p style="font-size:30px">상품권의 가치(금액) 변경하기</p>
+		<hr>
+		<br>
+		새로운 금액을 입력하세요:	
+		<input type="number" min="0" max="1000000000" id="newValue" placeholder="1200">
+		<p style="color:red; font-size:75%">*원래 발행한 금액보다 낮을 수 없습니다.</p>
+		<p style="color:red; font-size:75%">*상품권의 발급자만 가치 변경이 가능합니다.</p>
+		<br>
+		발급자 계좌의 암호를 입력하세요:	
+		<input type="password" id="cvPw">
+		<p>
+		<button id="bt_cvUnlock" type="button" onClick="unlockCV()" disabled>계좌 잠금 해제</button>
+		<button id="bt_change" type="button" onClick="changeGCValue()" disabled>가치 변경 요청</button>	
+		<p>
+	</div>	
+	
+	
+	<div class="div1" id='div_transfer' style="display:none">
+		<p>
+		<p style="font-size:30px">상품권의 소유권 이전하기</p>
+		<hr>
+		<br>
+		<div>
+			받으실 분의 계좌 주소를 입력하세요:<br>
+			<input type="text" id="txReceiver" placeholder="0x0000000000000000000000000000000000000000" style="width: 350px;"> <br>
+			<p style="color:red; font-size:75%">*상품권의 소유자만 소유권 이전이 가능합니다.</p>
+			<br>
+			소유자 계좌의 암호를 입력하세요:	
+			<input type="password" id="txPw">
+		</div>
+		<p>
+		<button id="bt_trUnlock" type="button" onClick="unlockTransfer()" disabled>계좌 잠금 해제</button>
+		<button id="bt_transfer" type="button" onClick="transfer()" disabled>소유권 이전 요청</button>
+		<p>
+	</div>
+	
+	
+	<div class="div1" id='div_destroy' style="display:none">
+		<p>
+		<p style="font-size:30px">상품권 환불 신청하기</p>
+		<hr>
+		<br>
+		<div>		
+			<p style="color:red; font-size:75%">*상품권의 소유자만 상품권 환불 신청이 가능합니다.</p>
+			<p style="color:red; font-size:75%">*원래 발행한 금액에서 소정의 수수료를 제외하고 소유자의 계좌로 환불됩니다.</p>
+			<br>
+			소유자 계좌의 암호를 입력하세요:	
+			<input type="password" id="dsPw">
+		</div>
+		<p>
+		<button id="bt_dsUnlock" type="button" onClick="unlockDestroy()" disabled>계좌 잠금 해제</button>
+		<button id="bt_destroy" type="button" onClick="destroy()" disabled>환불 요청</button>
+		<p>
+	</div>	
+</body>
+</html>
